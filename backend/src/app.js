@@ -4,6 +4,7 @@ import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
 import bookRoutes from "./routes/bookRoutes.js";
 import copyRoutes from "./routes/copyRoutes.js";
+import loanRoutes from "./routes/loanRoutes.js";
 
 const app = express();
 
@@ -20,7 +21,7 @@ app.get("/", (req, res) => {
     message: "Library Management API is running",
   });
 });
-
+app.use("/api/loans", loanRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api", copyRoutes);

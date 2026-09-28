@@ -1,0 +1,80 @@
+
+services:
+
+  # ==========================================================
+  # PostgreSQL Database
+  # ==========================================================
+  db:
+    image: postgres:16-alpine
+    container_name: library-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: library
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d library"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  # ==========================================================
+  # Backend / Express API
+  # ==========================================================
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+
+    container_name: library-backend
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/library
+
+      JWT_SECRET: change-this-secret
+
+    ports:
+      - "5000:5000"
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+
+  # ==========================================================
+  # React Client
+  # ==========================================================
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+
+    container_name: library-client
+    restart: unless-stopped
+
+    ports:
+      - "3000:80"
+
+    depends_on:
+      - backend
+
+
+# ============================================================
+# Persistent PostgreSQL volume
+# ============================================================
+
+volumes:
+  postgres_data:
